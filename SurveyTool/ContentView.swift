@@ -6,19 +6,50 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var viewModel: SurveyViewModel
+    @State private var showingAddSurvey = false
+    
+    init(modelContext: ModelContext) {
+        _viewModel = StateObject(wrappedValue: SurveyViewModel(modelContext: modelContext))
+    }
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            List {
+                ForEach(viewModel.surveys) { survey in
+                    NavigationLink {
+                        SurveyDetailView(survey: survey, viewModel: viewModel)
+                    } label: {
+                        SurveyRow(survey: survey, viewModel: viewModel)
+                    }
+                }
+            }
+            .navigationTitle("Surveys")
+            .toolbar {
+                Button(action: { showingAddSurvey = true }) {
+                    Image(systemName: "plus")
+                }
+            }
+            .sheet(isPresented: $showingAddSurvey) {
+                AddSurveyView(viewModel: viewModel)
+            }
         }
-        .padding()
     }
 }
 
 #Preview {
-    ContentView()
+    let container = try! ModelContainer(
+        for: Survey.self, SurveyResponse.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
+    
+    let context = ModelContext(container)
+    let survey = Survey(question: "Test test test")
+    context.insert(survey)
+    
+    return ContentView(modelContext: context)
 }

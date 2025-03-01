@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct SurveyToolApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(modelContext: try! ModelContext(
+                .init(for: Survey.self, SurveyResponse.self)
+            ))
         }
+        .modelContainer(for: [Survey.self, SurveyResponse.self])
     }
 }
